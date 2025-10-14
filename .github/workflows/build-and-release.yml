@@ -158,6 +158,10 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=ipcontainer
           cache-to: type=gha,mode=max,scope=ipcontainer
+          build-args: |
+            APP_VERSION=${{ needs.semantic-version.outputs.version }}
+            BUILD_DATE=${{ steps.meta.outputs.labels['org.opencontainers.image.created'] }}
+            GIT_COMMIT=${{ github.sha }}
           annotations: |
             org.opencontainers.image.title=My IP Container
             org.opencontainers.image.description=A simple web server that displays client IP addresses

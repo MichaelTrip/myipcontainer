@@ -13,6 +13,7 @@ import socket
 import datetime
 import requests
 import json
+import subprocess
 
 app = Flask(__name__)
 
@@ -187,6 +188,41 @@ HTML_TEMPLATE = """
             word-break: break-all;
         }
         
+        .footer {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+        
+        .github-link {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-muted);
+            transition: color 0.3s ease;
+        }
+        
+        .github-link:hover {
+            color: var(--text-primary);
+        }
+        
+        .github-logo {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            fill: currentColor;
+        }
+        
+        .version-info {
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+        }
+        
         @media (max-width: 768px) {
             .container {
                 padding: 2rem;
@@ -222,6 +258,12 @@ HTML_TEMPLATE = """
                 right: 10px;
                 padding: 10px 12px;
                 font-size: 16px;
+            }
+            
+            .footer {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
             }
         }
         
@@ -315,6 +357,18 @@ HTML_TEMPLATE = """
             <p><code>curl {{ base_url }}</code> - Full info with location & ISP</p>
             <p><code>curl {{ base_url }}?compact=true</code> - Just IP address</p>
             <p><code>curl {{ base_url }}/json</code> - JSON format</p>
+        </div>
+        
+        <div class="footer">
+            <a href="https://github.com/MichaelTrip/myipcontainer" target="_blank" class="github-link">
+                <svg class="github-logo" viewBox="0 0 16 16" aria-hidden="true">
+                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                </svg>
+                GitHub
+            </a>
+            <div class="version-info">
+                {{ version_info.version }} ({{ version_info.commit }}) • {{ version_info.build_date }}
+            </div>
         </div>
     </div>
     
@@ -423,6 +477,38 @@ def get_flag_emoji(country_code):
     # Convert country code to flag emoji using Unicode regional indicator symbols
     return ''.join(chr(ord(c) + 127397) for c in country_code.upper())
 
+def get_version_info():
+    """
+    Get version information from git or environment variables
+    """
+    version_info = {
+        'version': 'unknown',
+        'commit': 'unknown',
+        'build_date': 'unknown'
+    }
+    
+    try:
+        # Try to get version from git tag
+        git_tag = subprocess.check_output(['git', 'describe', '--tags', '--abbrev=0'], 
+                                        stderr=subprocess.DEVNULL, cwd=os.path.dirname(__file__)).decode().strip()
+        version_info['version'] = git_tag
+    except:
+        # Fallback to environment variable or default
+        version_info['version'] = os.environ.get('APP_VERSION', 'v1.0.0')
+    
+    try:
+        # Try to get commit hash
+        git_commit = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'], 
+                                           stderr=subprocess.DEVNULL, cwd=os.path.dirname(__file__)).decode().strip()
+        version_info['commit'] = git_commit
+    except:
+        version_info['commit'] = os.environ.get('GIT_COMMIT', 'unknown')[:7]
+    
+    # Get build date from environment or current date
+    version_info['build_date'] = os.environ.get('BUILD_DATE', datetime.datetime.now().strftime('%Y-%m-%d'))
+    
+    return version_info
+
 def log_visitor_info(client_ip, geolocation, user_agent, request_type="web"):
     """
     Log visitor information to stdout with IP, location, and ISP details
@@ -504,6 +590,9 @@ def show_ip():
         # Log visitor information
         log_visitor_info(client_ip, geolocation, user_agent, "browser")
         
+        # Get version information
+        version_info = get_version_info()
+        
         # Return fancy HTML for browsers
         return render_template_string(HTML_TEMPLATE,
             client_ip=client_ip,
@@ -514,7 +603,8 @@ def show_ip():
             user_agent=user_agent,
             forwarded_for=request.headers.get('X-Forwarded-For'),
             real_ip=request.headers.get('X-Real-IP'),
-            base_url=get_base_url()
+            base_url=get_base_url(),
+            version_info=version_info
         )
     else:
         # Get geolocation for API requests too (for logging)
@@ -618,6 +708,13 @@ def health_check():
     Health check endpoint for container orchestration
     """
     return {'status': 'healthy', 'timestamp': datetime.datetime.now().isoformat() + 'Z'}
+
+@app.route('/version')
+def version():
+    """
+    Version information endpoint
+    """
+    return get_version_info()
 
 def get_local_urls(host, port):
     """

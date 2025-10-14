@@ -14,6 +14,9 @@ services:
       - TRUST_PROXY=false
       - ENABLE_GEOLOCATION=true  # Set to true if behind reverse proxy
       - LOG_VISITORS=true        # Set to false to disable visitor logging
+      - APP_VERSION=v1.0.0-dev   # Override version for development
+      - BUILD_DATE=2025-10-14
+      - GIT_COMMIT=local-dev
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]

@@ -1,5 +1,10 @@
 FROM python:3.11-slim
 
+# Build arguments for version information
+ARG APP_VERSION=v1.0.0
+ARG BUILD_DATE=""
+ARG GIT_COMMIT=""
+
 # Set working directory
 WORKDIR /app
 
@@ -10,6 +15,9 @@ ENV PORT=8080
 ENV HOST=0.0.0.0
 ENV ENABLE_GEOLOCATION=true
 ENV LOG_VISITORS=true
+ENV APP_VERSION=${APP_VERSION}
+ENV BUILD_DATE=${BUILD_DATE}
+ENV GIT_COMMIT=${GIT_COMMIT}
 ENV TRUST_PROXY=false
 
 # Install system dependencies

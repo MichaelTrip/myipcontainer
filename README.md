@@ -58,6 +58,8 @@ Visit `http://localhost:8080` in your web browser to see a modern HTML interface
 - 🎨 **Light/Dark mode** - Automatic system theme detection with manual toggle
 - 📱 **Responsive design** - Works perfectly on desktop, tablet, and mobile
 - 🎯 **Smart layout** - IPv6 addresses wrap properly and remain readable
+- 🐙 **GitHub integration** - Direct link to source code repository
+- 📋 **Version display** - Shows current version, commit hash, and build date
 
 ### API Access
 Use curl or any HTTP client for programmatic access:
@@ -83,6 +85,10 @@ curl http://localhost:8080/json
 # Health check
 curl http://localhost:8080/health
 # Output: {"status": "healthy", "timestamp": "2025-10-14T..."}
+
+# Version information
+curl http://localhost:8080/version
+# Output: {"version": "v1.2.3", "commit": "abc1234", "build_date": "2025-10-14"}
 ```
 
 ## API Endpoints
@@ -94,6 +100,7 @@ curl http://localhost:8080/health
 | `/json` | Always returns JSON with geolocation | JSON |
 | `/health` | Health check for monitoring | JSON |
 | `/debug` | Debug info with headers and geolocation | JSON |
+| `/version` | Version and build information | JSON |
 
 ## Geolocation Features
 
