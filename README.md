@@ -6,6 +6,7 @@ A simple, lightweight Python web server that displays the client's IP address. P
 
 - 🌐 **Dual Interface**: Shows fancy HTML for browsers, plain text for curl/API clients
 - 🔍 **Smart IP Detection**: Handles various proxy headers (X-Forwarded-For, X-Real-IP, CF-Connecting-IP)
+- 🌍 **IP Geolocation**: Shows location, country flag, timezone, and ISP information
 - 🐳 **Container Ready**: Multi-architecture Docker image (AMD64, ARM64)
 - ⚡ **Production Ready**: Uses Gunicorn with optimal settings
 - 🏥 **Health Checks**: Built-in health check endpoint
@@ -78,8 +79,25 @@ curl http://localhost:8080/health
 | Endpoint | Description | Response Format |
 |----------|-------------|-----------------|
 | `/` | Main endpoint - HTML for browsers, text for curl | HTML/Text |
-| `/json` | Always returns JSON | JSON |
+| `/json` | Always returns JSON with geolocation | JSON |
 | `/health` | Health check for monitoring | JSON |
+| `/debug` | Debug info with headers and geolocation | JSON |
+
+## Geolocation Features
+
+The application automatically detects the geographic location of public IP addresses and displays:
+
+- 🌍 **Country and city** with flag emoji
+- 📍 **Coordinates** (latitude, longitude)  
+- 🕐 **Timezone** information
+- 🌐 **ISP and organization** details
+- 🏠 **Private network detection** (no geolocation for local IPs)
+
+**Privacy Notes:**
+- Geolocation only works for public IP addresses
+- Private/local IPs (192.168.x.x, 10.x.x.x, etc.) show "Local/Private Network"
+- Uses free ip-api.com service (no API key required)
+- Can be disabled by setting `ENABLE_GEOLOCATION=false`
 
 ## Configuration
 
@@ -90,15 +108,26 @@ The application can be configured using environment variables:
 | `PORT` | `8080` | Port to listen on |
 | `HOST` | `0.0.0.0` | Host to bind to |
 | `DEBUG` | `false` | Enable debug mode |
+| `TRUST_PROXY` | `false` | Trust proxy headers for IP detection |
+| `ENABLE_GEOLOCATION` | `true` | Enable IP geolocation lookup |
+| `TRUST_PROXY` | `false` | Enable proxy header parsing (X-Forwarded-For, X-Real-IP) |
 
 ### Docker Environment Variables
 
 ```bash
+# Direct access (default)
 docker run -p 8080:8080 \
   -e PORT=3000 \
   -e DEBUG=true \
   ghcr.io/michaeltrip/myipcontainer:latest
+
+# Behind reverse proxy (nginx, traefik, etc.)
+docker run -p 8080:8080 \
+  -e TRUST_PROXY=true \
+  ghcr.io/michaeltrip/myipcontainer:latest
 ```
+
+**⚠️ Security Note**: Only set `TRUST_PROXY=true` when the container is actually behind a trusted reverse proxy. This enables parsing of X-Forwarded-For headers which can be spoofed by clients if not properly filtered by a proxy.
 
 ### Kubernetes Environment Variables
 
