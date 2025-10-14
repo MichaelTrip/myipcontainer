@@ -25,9 +25,41 @@ HTML_TEMPLATE = """
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Your IP Address</title>
     <style>
+        :root {
+            --bg-color: #f0f4f8;
+            --container-bg: #ffffff;
+            --text-primary: #2d3748;
+            --text-secondary: #4a5568;
+            --text-muted: #718096;
+            --border-color: #e2e8f0;
+            --ip-bg: #f7fafc;
+            --details-bg: #edf2f7;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --button-bg: #4299e1;
+            --button-hover: #3182ce;
+        }
+        
+        [data-theme="dark"] {
+            --bg-color: #1a202c;
+            --container-bg: #2d3748;
+            --text-primary: #f7fafc;
+            --text-secondary: #e2e8f0;
+            --text-muted: #a0aec0;
+            --border-color: #4a5568;
+            --ip-bg: #374151;
+            --details-bg: #374151;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --button-bg: #4299e1;
+            --button-hover: #3182ce;
+        }
+        
+        * {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+        
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-color: var(--bg-color);
             margin: 0;
             padding: 0;
             min-height: 100vh;
@@ -35,76 +67,180 @@ HTML_TEMPLATE = """
             align-items: center;
             justify-content: center;
         }
+        
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--button-bg);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 12px 16px;
+            cursor: pointer;
+            font-size: 18px;
+            box-shadow: 0 4px 12px var(--shadow);
+            z-index: 1000;
+        }
+        
+        .theme-toggle:hover {
+            background: var(--button-hover);
+            transform: scale(1.05);
+        }
+        
         .container {
-            background: rgba(255, 255, 255, 0.95);
+            background: var(--container-bg);
             padding: 3rem;
             border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 20px 40px var(--shadow);
             text-align: center;
-            max-width: 600px;
+            max-width: 700px;
             width: 90%;
         }
+        
         .ip-display {
-            font-size: 3rem;
+            font-size: 2.5rem;
             font-weight: bold;
-            color: #4a5568;
+            color: var(--text-primary);
             margin: 1rem 0;
-            padding: 1rem;
-            background: #f7fafc;
-            border-radius: 10px;
-            border: 3px solid #e2e8f0;
+            padding: 1.5rem;
+            background: var(--ip-bg);
+            border-radius: 15px;
+            border: 2px solid var(--border-color);
             font-family: 'Courier New', monospace;
+            word-break: break-all;
+            word-wrap: break-word;
+            line-height: 1.2;
+            min-height: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
+        
         .info {
-            color: #718096;
+            color: var(--text-muted);
             margin: 0.5rem 0;
             font-size: 1.1rem;
         }
+        
         .header {
-            color: #2d3748;
+            color: var(--text-primary);
             font-size: 2.5rem;
             margin-bottom: 1rem;
         }
+        
         .details {
-            background: #edf2f7;
+            background: var(--details-bg);
             padding: 1.5rem;
-            border-radius: 10px;
+            border-radius: 15px;
             margin-top: 2rem;
             text-align: left;
+            border: 1px solid var(--border-color);
         }
+        
         .detail-row {
             display: flex;
             justify-content: space-between;
-            margin: 0.5rem 0;
-            padding: 0.5rem 0;
-            border-bottom: 1px solid #cbd5e0;
+            margin: 0.75rem 0;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border-color);
+            align-items: flex-start;
+            gap: 1rem;
         }
+        
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        
         .detail-label {
             font-weight: bold;
-            color: #4a5568;
+            color: var(--text-secondary);
+            min-width: 120px;
+            flex-shrink: 0;
         }
+        
         .detail-value {
             font-family: 'Courier New', monospace;
-            color: #2d3748;
+            color: var(--text-primary);
+            word-break: break-all;
+            word-wrap: break-word;
+            text-align: right;
+            flex-grow: 1;
         }
+        
+        .api-usage {
+            margin-top: 2rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            background: var(--details-bg);
+            padding: 1rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .api-usage code {
+            background: var(--ip-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: var(--text-primary);
+            word-break: break-all;
+        }
+        
         @media (max-width: 768px) {
             .container {
                 padding: 2rem;
+                margin: 1rem;
+                width: calc(100% - 2rem);
             }
+            
             .ip-display {
-                font-size: 2rem;
+                font-size: 1.8rem;
+                padding: 1rem;
             }
+            
             .header {
                 font-size: 2rem;
             }
+            
             .detail-row {
                 flex-direction: column;
-                gap: 0.25rem;
+                gap: 0.5rem;
+                align-items: flex-start;
+            }
+            
+            .detail-label {
+                min-width: auto;
+            }
+            
+            .detail-value {
+                text-align: left;
+            }
+            
+            .theme-toggle {
+                top: 10px;
+                right: 10px;
+                padding: 10px 12px;
+                font-size: 16px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .ip-display {
+                font-size: 1.5rem;
+            }
+            
+            .header {
+                font-size: 1.8rem;
             }
         }
     </style>
 </head>
 <body>
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">
+        🌙
+    </button>
+    
     <div class="container">
         <h1 class="header">🌐 Your IP Address</h1>
         <div class="ip-display">{{ client_ip }}</div>
@@ -174,13 +310,52 @@ HTML_TEMPLATE = """
             {% endif %}
         </div>
         
-        <div style="margin-top: 2rem; color: #718096; font-size: 0.9rem;">
-            <p>💡 <strong>API Usage:</strong></p>
+        <div class="api-usage">
+            <p><strong>💡 API Usage:</strong></p>
             <p><code>curl {{ base_url }}</code> - Full info with location & ISP</p>
             <p><code>curl {{ base_url }}?compact=true</code> - Just IP address</p>
             <p><code>curl {{ base_url }}/json</code> - JSON format</p>
         </div>
     </div>
+    
+    <script>
+        // Initialize theme
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 
+                              (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeToggle(savedTheme);
+        }
+        
+        // Toggle theme
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeToggle(newTheme);
+        }
+        
+        // Update toggle button
+        function updateThemeToggle(theme) {
+            const toggle = document.getElementById('themeToggle');
+            toggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+            toggle.title = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+        }
+        
+        // Listen for system theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (!localStorage.getItem('theme')) {
+                const newTheme = e.matches ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', newTheme);
+                updateThemeToggle(newTheme);
+            }
+        });
+        
+        // Initialize on page load
+        initTheme();
+    </script>
 </body>
 </html>
 """

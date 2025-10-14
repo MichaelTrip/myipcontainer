@@ -7,6 +7,7 @@ A simple, lightweight Python web server that displays the client's IP address. P
 - 🌐 **Dual Interface**: Shows fancy HTML for browsers, plain text for curl/API clients
 - 🔍 **Smart IP Detection**: Handles various proxy headers (X-Forwarded-For, X-Real-IP, CF-Connecting-IP)
 - 🌍 **IP Geolocation**: Shows location, country flag, timezone, and ISP information
+- 🎨 **Modern UI**: Light/dark mode with responsive design optimized for IPv6 addresses
 - 🐳 **Container Ready**: Multi-architecture Docker image (AMD64, ARM64)
 - ⚡ **Production Ready**: Uses Gunicorn with optimal settings
 - 🏥 **Health Checks**: Built-in health check endpoint
@@ -51,11 +52,12 @@ kubectl get services myipcontainer
 ## Usage Examples
 
 ### Browser Access
-Visit `http://localhost:8080` in your web browser to see a fancy HTML interface with:
-- Large, prominent IP display
-- Detailed request information
-- Responsive design for mobile devices
-- Dark/light theme support
+Visit `http://localhost:8080` in your web browser to see a modern HTML interface with:
+- 🔢 **Large IP display** - Optimized for both IPv4 and IPv6 addresses
+- 🌍 **Location details** - Country flag, city, ISP, and timezone information
+- 🎨 **Light/Dark mode** - Automatic system theme detection with manual toggle
+- 📱 **Responsive design** - Works perfectly on desktop, tablet, and mobile
+- 🎯 **Smart layout** - IPv6 addresses wrap properly and remain readable
 
 ### API Access
 Use curl or any HTTP client for programmatic access:
