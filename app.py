@@ -722,17 +722,35 @@ def get_local_urls(host, port):
     """
     urls = []
     
-    if host == '0.0.0.0':
-        # Server is listening on all interfaces
+    if host in ['0.0.0.0', '::']:
+        # Server is listening on all interfaces (IPv4 and/or IPv6)
         urls.append(f"http://localhost:{port}")
         
-        # Try to get the actual IP addresses
+        # Try to get the actual IP addresses (IPv4 and IPv6)
         try:
             import socket
             hostname = socket.gethostname()
-            local_ip = socket.gethostbyname(hostname)
-            if local_ip != '127.0.0.1':
-                urls.append(f"http://{local_ip}:{port}")
+            
+            # Get IPv4 address
+            try:
+                local_ipv4 = socket.gethostbyname(hostname)
+                if local_ipv4 != '127.0.0.1':
+                    urls.append(f"http://{local_ipv4}:{port}")
+            except:
+                pass
+            
+            # Get IPv6 addresses
+            try:
+                addr_info = socket.getaddrinfo(hostname, None, socket.AF_INET6)
+                for info in addr_info:
+                    ipv6_addr = info[4][0]
+                    # Skip loopback and link-local addresses
+                    if not ipv6_addr.startswith('::1') and not ipv6_addr.startswith('fe80'):
+                        urls.append(f"http://[{ipv6_addr}]:{port}")
+                        break  # Just add the first valid IPv6 address
+            except:
+                pass
+                
         except:
             pass
             
@@ -742,20 +760,36 @@ def get_local_urls(host, port):
                 # Get the container's IP in the Docker network
                 result = os.popen("hostname -i").read().strip()
                 if result and result != '127.0.0.1':
-                    urls.append(f"http://{result}:{port}")
+                    # Handle both IPv4 and IPv6 addresses from hostname -i
+                    for ip in result.split():
+                        if ':' in ip and not ip.startswith('::1'):
+                            urls.append(f"http://[{ip}]:{port}")
+                        elif '.' in ip and ip != '127.0.0.1':
+                            urls.append(f"http://{ip}:{port}")
             except:
                 pass
     else:
-        urls.append(f"http://{host}:{port}")
+        # Specific host binding
+        if ':' in host and not host.startswith('['):
+            # IPv6 address
+            urls.append(f"http://[{host}]:{port}")
+        else:
+            urls.append(f"http://{host}:{port}")
     
     return urls
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
-    host = os.environ.get('HOST', '0.0.0.0')
+    host = os.environ.get('HOST', '::')  # Default to IPv6 dual-stack
     debug = os.environ.get('DEBUG', 'false').lower() == 'true'
     
-    print(f"🚀 Starting IP Display Server on {host}:{port}")
+    # If HOST is explicitly set to 0.0.0.0, keep it for IPv4-only compatibility
+    if host == '0.0.0.0':
+        print(f"🚀 Starting IP Display Server on {host}:{port} (IPv4 only)")
+    elif host == '::':
+        print(f"🚀 Starting IP Display Server on [::]:{port} (IPv4 + IPv6 dual-stack)")
+    else:
+        print(f"🚀 Starting IP Display Server on {host}:{port}")
     
     # Show all possible access URLs
     urls = get_local_urls(host, port)
@@ -766,4 +800,10 @@ if __name__ == '__main__':
         else:
             print(f"📡 Also available at: {url}")
     
-    app.run(host=host, port=port, debug=debug)
+    # Configure Flask for dual-stack if using ::
+    if host == '::':
+        # Flask's built-in server doesn't support :: directly, fall back to 0.0.0.0
+        print("💡 Note: Flask dev server using 0.0.0.0 (IPv6 support requires production server)")
+        app.run(host='0.0.0.0', port=port, debug=debug)
+    else:
+        app.run(host=host, port=port, debug=debug)

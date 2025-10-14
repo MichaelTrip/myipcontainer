@@ -12,7 +12,7 @@ WORKDIR /app
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PORT=8080
-ENV HOST=0.0.0.0
+ENV HOST=::
 ENV ENABLE_GEOLOCATION=true
 ENV LOG_VISITORS=true
 ENV APP_VERSION=${APP_VERSION}
@@ -40,12 +40,12 @@ RUN useradd --create-home --shell /bin/bash app \
     && chown -R app:app /app
 USER app
 
-# Expose the port (will use PORT env var)
+# Expose the port for both IPv4 and IPv6
 EXPOSE ${PORT}
 
-# Health check (using PORT env var)
+# Health check (try IPv4 first, then IPv6 if available)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:${PORT}/health || exit 1
+    CMD curl -f http://localhost:${PORT}/health || curl -f http://[::1]:${PORT}/health || exit 1
 
-# Run the application with gunicorn for production
-CMD gunicorn --bind 0.0.0.0:${PORT} --workers 4 --worker-class sync --worker-connections 1000 --max-requests 1000 --max-requests-jitter 100 --timeout 30 --keep-alive 5 --access-logfile - --error-logfile - app:app
+# Run the application with gunicorn for production - bind to all interfaces (IPv4 and IPv6)
+CMD gunicorn --bind [::]:${PORT} --workers 4 --worker-class sync --worker-connections 1000 --max-requests 1000 --max-requests-jitter 100 --timeout 30 --keep-alive 5 --access-logfile - --error-logfile - app:app

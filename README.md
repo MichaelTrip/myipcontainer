@@ -8,7 +8,8 @@ A simple, lightweight Python web server that displays the client's IP address. P
 - 🔍 **Smart IP Detection**: Handles various proxy headers (X-Forwarded-For, X-Real-IP, CF-Connecting-IP)
 - 🌍 **IP Geolocation**: Shows location, country flag, timezone, and ISP information
 - 🎨 **Modern UI**: Light/dark mode with responsive design optimized for IPv6 addresses
-- 🐳 **Container Ready**: Multi-architecture Docker image (AMD64, ARM64)
+- � **IPv4 + IPv6 Support**: Dual-stack networking with proper IPv6 address display
+- �🐳 **Container Ready**: Multi-architecture Docker image (AMD64, ARM64)
 - ⚡ **Production Ready**: Uses Gunicorn with optimal settings
 - 🏥 **Health Checks**: Built-in health check endpoint
 - 📊 **Detailed Info**: Shows headers, timestamps, and server details
@@ -141,6 +142,41 @@ The application logs detailed visitor information to stdout for monitoring and a
 - Logs are sent to stdout for container log aggregation
 - Also logged to Flask's structured logger for external log systems
 
+## IPv4 and IPv6 Support
+
+The application supports both IPv4 and IPv6 networking:
+
+### 🌐 **Dual-Stack Configuration (Default)**
+```bash
+# Container listens on both IPv4 and IPv6
+HOST="::"
+```
+
+### 📱 **IPv4 Only Configuration**
+```bash
+# Container listens on IPv4 only
+HOST="0.0.0.0" 
+```
+
+### 🔧 **Access Examples**
+```bash
+# IPv4 access
+curl http://192.168.1.100:8080
+
+# IPv6 access
+curl http://[2001:db8::1]:8080
+curl http://[::1]:8080  # localhost IPv6
+
+# Dual-stack localhost
+curl http://localhost:8080  # Works for both IPv4 and IPv6
+```
+
+### 🎯 **Features**
+- **Smart Display**: IPv6 addresses wrap properly in the UI
+- **Dual Health Checks**: Container health checks try both IPv4 and IPv6
+- **Auto-Detection**: Shows all available network interfaces on startup
+- **Proper Formatting**: IPv6 addresses displayed with brackets in URLs
+
 ## Configuration
 
 The application can be configured using environment variables:
@@ -148,7 +184,7 @@ The application can be configured using environment variables:
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `PORT` | `8080` | Port to listen on |
-| `HOST` | `0.0.0.0` | Host to bind to |
+| `HOST` | `::` | Host to bind to (`::` for IPv4+IPv6, `0.0.0.0` for IPv4 only) |
 | `DEBUG` | `false` | Enable debug mode |
 | `TRUST_PROXY` | `false` | Trust proxy headers for IP detection |
 | `ENABLE_GEOLOCATION` | `true` | Enable IP geolocation lookup |

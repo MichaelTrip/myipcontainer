@@ -9,7 +9,7 @@ services:
     network_mode: host
     environment:
       - PORT=8080
-      - HOST=0.0.0.0
+      - HOST="::"                # IPv4 + IPv6 dual-stack (use 0.0.0.0 for IPv4 only)
       - DEBUG=false
       - TRUST_PROXY=false
       - ENABLE_GEOLOCATION=true  # Set to true if behind reverse proxy
