@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: myipcontainer-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/use-real-ip: "true"
+    nginx.ingress.kubernetes.io/real-ip-header: "X-Forwarded-For"
+    nginx.ingress.kubernetes.io/real-ip-recursive: "on"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: myip.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: myipcontainer-service
+            port:
+              number: 80
+  # Uncomment below for TLS termination
+  # tls:
+  # - hosts:
+  #   - myip.example.com
+  #   secretName: myip-tls
