@@ -132,6 +132,12 @@ HTML_TEMPLATE = """
                 <span class="detail-label">ISP:</span>
                 <span class="detail-value">{{ geolocation.isp }}</span>
             </div>
+            {% if geolocation.org and geolocation.org != geolocation.isp %}
+            <div class="detail-row">
+                <span class="detail-label">Organization:</span>
+                <span class="detail-value">{{ geolocation.org }}</span>
+            </div>
+            {% endif %}
             {% else %}
             <div class="detail-row">
                 <span class="detail-label">Location:</span>
@@ -239,6 +245,29 @@ def get_flag_emoji(country_code):
     # Convert country code to flag emoji using Unicode regional indicator symbols
     return ''.join(chr(ord(c) + 127397) for c in country_code.upper())
 
+def log_visitor_info(client_ip, geolocation, user_agent, request_type="web"):
+    """
+    Log visitor information to stdout with IP, location, and ISP details
+    """
+    # Check if visitor logging is enabled
+    if os.environ.get('LOG_VISITORS', 'true').lower() != 'true':
+        return
+        
+    timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')
+    
+    if geolocation:
+        location_str = f"{geolocation.get('city', 'Unknown')}, {geolocation.get('country', 'Unknown')}"
+        isp_str = geolocation.get('isp', 'Unknown ISP')
+        org_str = geolocation.get('org', 'Unknown Org')
+        flag = geolocation.get('flag_emoji', '')
+        
+        print(f"📍 [{timestamp}] VISITOR: {client_ip} | {flag} {location_str} | ISP: {isp_str} | ORG: {org_str} | TYPE: {request_type} | UA: {user_agent[:50]}...")
+    else:
+        print(f"🏠 [{timestamp}] VISITOR: {client_ip} | Local/Private Network | TYPE: {request_type} | UA: {user_agent[:50]}...")
+    
+    # Also log to Flask's default logger for structured logging
+    app.logger.info(f"Client visit: IP={client_ip}, Location={location_str if geolocation else 'Local'}, ISP={isp_str if geolocation else 'N/A'}, Type={request_type}")
+
 def get_client_ip():
     """
     Get the real client IP address, handling various proxy headers
@@ -287,11 +316,15 @@ def show_ip():
     - Returns HTML for web browsers
     """
     client_ip = get_client_ip()
+    user_agent = request.headers.get('User-Agent', 'Unknown')
     
     # Check if this is a browser request or API request
     if is_browser_request() and 'application/json' not in request.headers.get('Accept', ''):
         # Get geolocation for browser requests
         geolocation = get_ip_geolocation(client_ip)
+        
+        # Log visitor information
+        log_visitor_info(client_ip, geolocation, user_agent, "browser")
         
         # Return fancy HTML for browsers
         return render_template_string(HTML_TEMPLATE,
@@ -300,12 +333,18 @@ def show_ip():
             server_host=socket.gethostname(),
             server_port=os.environ.get('PORT', '8080'),
             timestamp=datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC'),
-            user_agent=request.headers.get('User-Agent', 'Unknown'),
+            user_agent=user_agent,
             forwarded_for=request.headers.get('X-Forwarded-For'),
             real_ip=request.headers.get('X-Real-IP'),
             base_url=get_base_url()
         )
     else:
+        # Get geolocation for API requests too (for logging)
+        geolocation = get_ip_geolocation(client_ip)
+        
+        # Log visitor information
+        log_visitor_info(client_ip, geolocation, user_agent, "api")
+        
         # Return plain text for curl/API requests
         return f"{client_ip}\n", 200, {'Content-Type': 'text/plain'}
 
@@ -316,6 +355,10 @@ def show_ip_json():
     """
     client_ip = get_client_ip()
     geolocation = get_ip_geolocation(client_ip)
+    user_agent = request.headers.get('User-Agent', 'Unknown')
+    
+    # Log visitor information
+    log_visitor_info(client_ip, geolocation, user_agent, "json")
     
     response_data = {
         'client_ip': client_ip,
@@ -324,7 +367,7 @@ def show_ip_json():
         'server_port': int(os.environ.get('PORT', '8080')),
         'timestamp': datetime.datetime.now().isoformat() + 'Z',
         'headers': {
-            'user_agent': request.headers.get('User-Agent'),
+            'user_agent': user_agent,
             'x_forwarded_for': request.headers.get('X-Forwarded-For'),
             'x_real_ip': request.headers.get('X-Real-IP'),
             'cf_connecting_ip': request.headers.get('CF-Connecting-IP')

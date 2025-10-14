@@ -99,6 +99,29 @@ The application automatically detects the geographic location of public IP addre
 - Uses free ip-api.com service (no API key required)
 - Can be disabled by setting `ENABLE_GEOLOCATION=false`
 
+## Visitor Logging
+
+The application logs detailed visitor information to stdout for monitoring and analytics:
+
+**Log Format:**
+```
+📍 [2025-10-14 10:30:15 UTC] VISITOR: 203.0.113.42 | 🇺🇸 New York, United States | ISP: Example ISP | ORG: Example Corp | TYPE: browser | UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64)...
+🏠 [2025-10-14 10:31:22 UTC] VISITOR: 192.168.1.100 | Local/Private Network | TYPE: api | UA: curl/7.68.0...
+```
+
+**Logged Information:**
+- 📅 **Timestamp** - Request time in UTC
+- 🌐 **IP Address** - Client's detected IP
+- 🌍 **Location** - Country flag, city, and country (for public IPs)
+- 🏢 **ISP/Organization** - Internet service provider details
+- 📱 **Request Type** - browser, api, json
+- 🔧 **User Agent** - Client information (first 50 characters)
+
+**Configuration:**
+- Enable/disable with `LOG_VISITORS=true/false`
+- Logs are sent to stdout for container log aggregation
+- Also logged to Flask's structured logger for external log systems
+
 ## Configuration
 
 The application can be configured using environment variables:
@@ -110,6 +133,7 @@ The application can be configured using environment variables:
 | `DEBUG` | `false` | Enable debug mode |
 | `TRUST_PROXY` | `false` | Trust proxy headers for IP detection |
 | `ENABLE_GEOLOCATION` | `true` | Enable IP geolocation lookup |
+| `LOG_VISITORS` | `true` | Log visitor IP, location, and ISP info to stdout |
 | `TRUST_PROXY` | `false` | Enable proxy header parsing (X-Forwarded-For, X-Real-IP) |
 
 ### Docker Environment Variables

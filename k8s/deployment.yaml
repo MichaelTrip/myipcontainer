@@ -30,6 +30,8 @@ spec:
           value: "true"  # Enable for Kubernetes ingress
         - name: ENABLE_GEOLOCATION
           value: "true"
+        - name: LOG_VISITORS
+          value: "true"
         resources:
           requests:
             memory: "128Mi"
