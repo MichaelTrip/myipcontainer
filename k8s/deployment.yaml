@@ -18,26 +18,34 @@ spec:
       - name: myipcontainer
         image: ghcr.io/michaeltrip/myipcontainer:latest
         ports:
-        - containerPort: 5000
+        - containerPort: 8080
         env:
-        - name: FLASK_ENV
-          value: "production"
+        - name: PORT
+          value: "8080"
+        - name: HOST
+          value: "0.0.0.0"
+        - name: DEBUG
+          value: "false"
+        - name: TRUST_PROXY
+          value: "true"  # Enable for Kubernetes ingress
+        - name: ENABLE_GEOLOCATION
+          value: "true"
         resources:
           requests:
-            memory: "64Mi"
-            cpu: "50m"
-          limits:
             memory: "128Mi"
             cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
         livenessProbe:
           httpGet:
             path: /health
-            port: 5000
+            port: 8080
           initialDelaySeconds: 30
           periodSeconds: 10
         readinessProbe:
           httpGet:
             path: /health
-            port: 5000
+            port: 8080
           initialDelaySeconds: 5
           periodSeconds: 5

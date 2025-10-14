@@ -7,6 +7,9 @@ metadata:
     nginx.ingress.kubernetes.io/use-real-ip: "true"
     nginx.ingress.kubernetes.io/real-ip-header: "X-Forwarded-For"
     nginx.ingress.kubernetes.io/real-ip-recursive: "on"
+    nginx.ingress.kubernetes.io/proxy-body-size: "1m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
 spec:
   ingressClassName: nginx
   rules:
