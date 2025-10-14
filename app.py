@@ -175,7 +175,10 @@ HTML_TEMPLATE = """
         </div>
         
         <div style="margin-top: 2rem; color: #718096; font-size: 0.9rem;">
-            <p>💡 <strong>API Usage:</strong> Use <code>curl {{ base_url }}</code> for plain text output</p>
+            <p>💡 <strong>API Usage:</strong></p>
+            <p><code>curl {{ base_url }}</code> - Full info with location & ISP</p>
+            <p><code>curl {{ base_url }}?compact=true</code> - Just IP address</p>
+            <p><code>curl {{ base_url }}/json</code> - JSON format</p>
         </div>
     </div>
 </body>
@@ -345,8 +348,32 @@ def show_ip():
         # Log visitor information
         log_visitor_info(client_ip, geolocation, user_agent, "api")
         
-        # Return plain text for curl/API requests
-        return f"{client_ip}\n", 200, {'Content-Type': 'text/plain'}
+        # Check if compact mode is requested
+        compact = request.args.get('compact', 'false').lower() == 'true'
+        
+        if compact:
+            # Return just the IP for compact mode
+            return f"{client_ip}\n", 200, {'Content-Type': 'text/plain'}
+        
+        # Return enhanced plain text for curl/API requests
+        response_lines = [f"IP: {client_ip}"]
+        
+        if geolocation:
+            location = f"{geolocation.get('city', 'Unknown')}, {geolocation.get('region', 'Unknown')}, {geolocation.get('country', 'Unknown')}"
+            response_lines.append(f"Location: {geolocation.get('flag_emoji', '')} {location}")
+            
+            if geolocation.get('isp'):
+                response_lines.append(f"ISP: {geolocation.get('isp')}")
+            
+            if geolocation.get('org') and geolocation.get('org') != geolocation.get('isp'):
+                response_lines.append(f"Organization: {geolocation.get('org')}")
+                
+            if geolocation.get('timezone'):
+                response_lines.append(f"Timezone: {geolocation.get('timezone')}")
+        else:
+            response_lines.append("Location: Local/Private Network")
+        
+        return "\n".join(response_lines) + "\n", 200, {'Content-Type': 'text/plain'}
 
 @app.route('/json')
 def show_ip_json():

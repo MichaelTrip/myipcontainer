@@ -61,13 +61,22 @@ Visit `http://localhost:8080` in your web browser to see a fancy HTML interface 
 Use curl or any HTTP client for programmatic access:
 
 ```bash
-# Get plain text IP
+# Get full info with location and ISP
 curl http://localhost:8080
-# Output: 192.168.1.100
+# Output: 
+# IP: 203.0.113.42
+# Location: 🇺🇸 New York, New York, United States
+# ISP: Example ISP Corp
+# Organization: Example Organization
+# Timezone: America/New_York
 
-# Get JSON response
+# Get just IP address (compact mode)
+curl http://localhost:8080?compact=true
+# Output: 203.0.113.42
+
+# Get JSON response with all details
 curl http://localhost:8080/json
-# Output: {"client_ip": "192.168.1.100", "server_host": "...", ...}
+# Output: {"client_ip": "203.0.113.42", "geolocation": {...}, ...}
 
 # Health check
 curl http://localhost:8080/health
@@ -78,7 +87,8 @@ curl http://localhost:8080/health
 
 | Endpoint | Description | Response Format |
 |----------|-------------|-----------------|
-| `/` | Main endpoint - HTML for browsers, text for curl | HTML/Text |
+| `/` | Main endpoint - HTML for browsers, enhanced text for curl | HTML/Text |
+| `/?compact=true` | Compact mode - returns only IP address | Text |
 | `/json` | Always returns JSON with geolocation | JSON |
 | `/health` | Health check for monitoring | JSON |
 | `/debug` | Debug info with headers and geolocation | JSON |
