@@ -7,6 +7,7 @@ A simple, lightweight Python web server that displays the client's IP address. P
 - 🌐 **Dual Interface**: Shows fancy HTML for browsers, plain text for curl/API clients
 - 🔍 **Smart IP Detection**: Handles various proxy headers (X-Forwarded-For, X-Real-IP, CF-Connecting-IP)
 - 🌍 **IP Geolocation**: Shows location, country flag, timezone, and ISP information
+- 🔄 **Reverse DNS Lookup**: Shows hostname associated with IP address
 - 🎨 **Modern UI**: Light/dark mode with responsive design optimized for IPv6 addresses
 - � **IPv4 + IPv6 Support**: Dual-stack networking with proper IPv6 address display
 - �🐳 **Container Ready**: Multi-architecture Docker image (AMD64, ARM64)
@@ -70,6 +71,7 @@ Use curl or any HTTP client for programmatic access:
 curl http://localhost:8080
 # Output: 
 # IP: 203.0.113.42
+# Reverse DNS: example.com
 # Location: 🇺🇸 New York, New York, United States
 # ISP: Example ISP Corp
 # Organization: Example Organization
@@ -103,21 +105,29 @@ curl http://localhost:8080/version
 | `/debug` | Debug info with headers and geolocation | JSON |
 | `/version` | Version and build information | JSON |
 
-## Geolocation Features
+## IP Enhancement Features
 
-The application automatically detects the geographic location of public IP addresses and displays:
+The application automatically enhances IP address information with:
 
-- 🌍 **Country and city** with flag emoji
-- 📍 **Coordinates** (latitude, longitude)  
-- 🕐 **Timezone** information
-- 🌐 **ISP and organization** details
-- 🏠 **Private network detection** (no geolocation for local IPs)
+### 🌍 Geolocation Features
+- **Country and city** with flag emoji
+- **Coordinates** (latitude, longitude)  
+- **Timezone** information
+- **ISP and organization** details
+- **Private network detection** (no geolocation for local IPs)
+
+### 🔄 Reverse DNS Lookup
+- **Hostname resolution** from IP address
+- **3-second timeout** to prevent blocking
+- **Automatic error handling** for failed lookups
+- **Works for both public and private IPs**
 
 **Privacy Notes:**
 - Geolocation only works for public IP addresses
-- Private/local IPs (192.168.x.x, 10.x.x.x, etc.) show "Local/Private Network"
-- Uses free ip-api.com service (no API key required)
-- Can be disabled by setting `ENABLE_GEOLOCATION=false`
+- Private/local IPs (192.168.x.x, 10.x.x.x, etc.) show "Local/Private Network"  
+- Reverse DNS works for any IP that has a PTR record
+- Uses free ip-api.com service for geolocation (no API key required)
+- Can be disabled by setting `ENABLE_GEOLOCATION=false` or `ENABLE_REVERSE_DNS=false`
 
 ## Visitor Logging
 
@@ -188,8 +198,8 @@ The application can be configured using environment variables:
 | `DEBUG` | `false` | Enable debug mode |
 | `TRUST_PROXY` | `false` | Trust proxy headers for IP detection |
 | `ENABLE_GEOLOCATION` | `true` | Enable IP geolocation lookup |
+| `ENABLE_REVERSE_DNS` | `true` | Enable reverse DNS hostname lookup |
 | `LOG_VISITORS` | `true` | Log visitor IP, location, and ISP info to stdout |
-| `TRUST_PROXY` | `false` | Enable proxy header parsing (X-Forwarded-For, X-Real-IP) |
 
 ### Docker Environment Variables
 

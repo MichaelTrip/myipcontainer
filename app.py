@@ -293,6 +293,12 @@ HTML_TEMPLATE = """
                 <span class="detail-label">Client IP:</span>
                 <span class="detail-value">{{ client_ip }}</span>
             </div>
+            {% if reverse_dns %}
+            <div class="detail-row">
+                <span class="detail-label">Reverse DNS:</span>
+                <span class="detail-value">{{ reverse_dns }}</span>
+            </div>
+            {% endif %}
             {% if geolocation %}
             <div class="detail-row">
                 <span class="detail-label">Location:</span>
@@ -477,6 +483,30 @@ def get_flag_emoji(country_code):
     # Convert country code to flag emoji using Unicode regional indicator symbols
     return ''.join(chr(ord(c) + 127397) for c in country_code.upper())
 
+def get_reverse_dns(ip_address):
+    """
+    Perform reverse DNS lookup for an IP address
+    Returns the hostname if found, None if lookup fails
+    """
+    # Check if reverse DNS is enabled
+    if os.environ.get('ENABLE_REVERSE_DNS', 'true').lower() != 'true':
+        return None
+        
+    try:
+        # Perform reverse DNS lookup with timeout
+        socket.setdefaulttimeout(3)  # 3 second timeout
+        hostname, _, _ = socket.gethostbyaddr(ip_address)
+        return hostname
+    except (socket.herror, socket.gaierror, socket.timeout) as e:
+        # DNS lookup failed or timed out
+        return None
+    except Exception as e:
+        print(f"Reverse DNS lookup failed: {e}")
+        return None
+    finally:
+        # Reset socket timeout to default
+        socket.setdefaulttimeout(None)
+
 def get_version_info():
     """
     Get version information from git or environment variables
@@ -584,8 +614,9 @@ def show_ip():
     
     # Check if this is a browser request or API request
     if is_browser_request() and 'application/json' not in request.headers.get('Accept', ''):
-        # Get geolocation for browser requests
+        # Get geolocation and reverse DNS for browser requests
         geolocation = get_ip_geolocation(client_ip)
+        reverse_dns = get_reverse_dns(client_ip)
         
         # Log visitor information
         log_visitor_info(client_ip, geolocation, user_agent, "browser")
@@ -597,6 +628,7 @@ def show_ip():
         return render_template_string(HTML_TEMPLATE,
             client_ip=client_ip,
             geolocation=geolocation,
+            reverse_dns=reverse_dns,
             server_host=socket.gethostname(),
             server_port=os.environ.get('PORT', '8080'),
             timestamp=datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC'),
@@ -607,8 +639,9 @@ def show_ip():
             version_info=version_info
         )
     else:
-        # Get geolocation for API requests too (for logging)
+        # Get geolocation and reverse DNS for API requests too (for logging)
         geolocation = get_ip_geolocation(client_ip)
+        reverse_dns = get_reverse_dns(client_ip)
         
         # Log visitor information
         log_visitor_info(client_ip, geolocation, user_agent, "api")
@@ -622,6 +655,9 @@ def show_ip():
         
         # Return enhanced plain text for curl/API requests
         response_lines = [f"IP: {client_ip}"]
+        
+        if reverse_dns:
+            response_lines.append(f"Reverse DNS: {reverse_dns}")
         
         if geolocation:
             location = f"{geolocation.get('city', 'Unknown')}, {geolocation.get('region', 'Unknown')}, {geolocation.get('country', 'Unknown')}"
@@ -647,6 +683,7 @@ def show_ip_json():
     """
     client_ip = get_client_ip()
     geolocation = get_ip_geolocation(client_ip)
+    reverse_dns = get_reverse_dns(client_ip)
     user_agent = request.headers.get('User-Agent', 'Unknown')
     
     # Log visitor information
@@ -654,6 +691,7 @@ def show_ip_json():
     
     response_data = {
         'client_ip': client_ip,
+        'reverse_dns': reverse_dns,
         'geolocation': geolocation,
         'server_host': socket.gethostname(),
         'server_port': int(os.environ.get('PORT', '8080')),
@@ -676,14 +714,18 @@ def debug():
     client_ip = get_client_ip()
     trust_proxy = os.environ.get('TRUST_PROXY', 'false').lower() == 'true'
     enable_geolocation = os.environ.get('ENABLE_GEOLOCATION', 'true').lower() == 'true'
+    enable_reverse_dns = os.environ.get('ENABLE_REVERSE_DNS', 'true').lower() == 'true'
     geolocation = get_ip_geolocation(client_ip) if enable_geolocation else None
+    reverse_dns = get_reverse_dns(client_ip) if enable_reverse_dns else None
     
     debug_info = {
         'detected_ip': client_ip,
         'remote_addr': request.remote_addr,
         'trust_proxy': trust_proxy,
         'enable_geolocation': enable_geolocation,
+        'enable_reverse_dns': enable_reverse_dns,
         'geolocation': geolocation,
+        'reverse_dns': reverse_dns,
         'proxy_headers': {
             'X-Forwarded-For': request.headers.get('X-Forwarded-For'),
             'X-Real-IP': request.headers.get('X-Real-IP'),
