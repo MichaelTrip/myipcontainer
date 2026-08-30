@@ -630,7 +630,7 @@ def show_ip():
     if is_browser_request() and 'application/json' not in request.headers.get('Accept', ''):
         # Get geolocation and reverse DNS for browser requests
         geolocation = get_ip_geolocation(client_ip)
-        reverse_dns = get_reverse_dns(client_ip) if is_reverse_dns_enabled() else None
+        reverse_dns = get_reverse_dns(client_ip)
         
         # Log visitor information
         log_visitor_info(client_ip, geolocation, user_agent, "browser")
@@ -655,7 +655,7 @@ def show_ip():
     else:
         # Get geolocation and reverse DNS for API requests too (for logging)
         geolocation = get_ip_geolocation(client_ip)
-        reverse_dns = get_reverse_dns(client_ip) if is_reverse_dns_enabled() else None
+        reverse_dns = get_reverse_dns(client_ip)
         
         # Log visitor information
         log_visitor_info(client_ip, geolocation, user_agent, "api")
@@ -697,7 +697,7 @@ def show_ip_json():
     """
     client_ip = get_client_ip()
     geolocation = get_ip_geolocation(client_ip)
-    reverse_dns = get_reverse_dns(client_ip) if is_reverse_dns_enabled() else None
+    reverse_dns = get_reverse_dns(client_ip)
     user_agent = request.headers.get('User-Agent', 'Unknown')
     
     # Log visitor information
