@@ -30,6 +30,8 @@ spec:
           value: "true"  # Enable for Kubernetes ingress
         - name: ENABLE_GEOLOCATION
           value: "true"
+        - name: ENABLE_REVERSE_DNS
+          value: "true"
         - name: LOG_VISITORS
           value: "true"
         resources:

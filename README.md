@@ -208,6 +208,7 @@ The application can be configured using environment variables:
 docker run -p 8080:8080 \
   -e PORT=3000 \
   -e DEBUG=true \
+  -e ENABLE_REVERSE_DNS=false \
   ghcr.io/michaeltrip/myipcontainer:latest
 
 # Behind reverse proxy (nginx, traefik, etc.)
@@ -226,6 +227,8 @@ env:
     value: "8080"
   - name: DEBUG
     value: "false"
+  - name: ENABLE_REVERSE_DNS
+    value: "true"
 ```
 
 ## Deployment Examples

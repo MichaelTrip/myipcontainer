@@ -13,6 +13,7 @@ services:
       - DEBUG=false
       - TRUST_PROXY=false
       - ENABLE_GEOLOCATION=true  # Set to true if behind reverse proxy
+      - ENABLE_REVERSE_DNS=true  # Set to false to disable reverse DNS lookups
       - LOG_VISITORS=true        # Set to false to disable visitor logging
       - APP_VERSION=v1.0.0-dev   # Override version for development
       - BUILD_DATE=2025-10-14
