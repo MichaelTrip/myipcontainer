@@ -17,6 +17,20 @@ import subprocess
 
 app = Flask(__name__)
 
+
+def is_env_var_enabled(name, default='false'):
+    """
+    Return True when the named environment variable is explicitly enabled.
+    """
+    return os.environ.get(name, default).lower() == 'true'
+
+
+def is_reverse_dns_enabled():
+    """
+    Return whether reverse DNS lookups are enabled.
+    """
+    return is_env_var_enabled('ENABLE_REVERSE_DNS', 'true')
+
 # HTML template for browser requests
 HTML_TEMPLATE = """
 <!DOCTYPE html>
@@ -489,7 +503,7 @@ def get_reverse_dns(ip_address):
     Returns the hostname if found, None if lookup fails
     """
     # Check if reverse DNS is enabled
-    if os.environ.get('ENABLE_REVERSE_DNS', 'true').lower() != 'true':
+    if not is_reverse_dns_enabled():
         return None
         
     try:
@@ -544,7 +558,7 @@ def log_visitor_info(client_ip, geolocation, user_agent, request_type="web"):
     Log visitor information to stdout with IP, location, and ISP details
     """
     # Check if visitor logging is enabled
-    if os.environ.get('LOG_VISITORS', 'true').lower() != 'true':
+    if not is_env_var_enabled('LOG_VISITORS', 'true'):
         return
         
     timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')
@@ -566,7 +580,7 @@ def get_client_ip():
     """
     Get the real client IP address, handling various proxy headers
     """
-    trust_proxy = os.environ.get('TRUST_PROXY', 'false').lower() == 'true'
+    trust_proxy = is_env_var_enabled('TRUST_PROXY')
     
     # If TRUST_PROXY is enabled, check proxy headers
     if trust_proxy:
@@ -712,9 +726,9 @@ def debug():
     Debug endpoint to show all request headers and IP detection
     """
     client_ip = get_client_ip()
-    trust_proxy = os.environ.get('TRUST_PROXY', 'false').lower() == 'true'
-    enable_geolocation = os.environ.get('ENABLE_GEOLOCATION', 'true').lower() == 'true'
-    enable_reverse_dns = os.environ.get('ENABLE_REVERSE_DNS', 'true').lower() == 'true'
+    trust_proxy = is_env_var_enabled('TRUST_PROXY')
+    enable_geolocation = is_env_var_enabled('ENABLE_GEOLOCATION', 'true')
+    enable_reverse_dns = is_reverse_dns_enabled()
     geolocation = get_ip_geolocation(client_ip) if enable_geolocation else None
     reverse_dns = get_reverse_dns(client_ip) if enable_reverse_dns else None
     
@@ -823,7 +837,7 @@ def get_local_urls(host, port):
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
     host = os.environ.get('HOST', '::')  # Default to IPv6 dual-stack
-    debug = os.environ.get('DEBUG', 'false').lower() == 'true'
+    debug = is_env_var_enabled('DEBUG')
     
     # If HOST is explicitly set to 0.0.0.0, keep it for IPv4-only compatibility
     if host == '0.0.0.0':
