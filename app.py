@@ -39,348 +39,242 @@ HTML_TEMPLATE = """
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Your IP Address</title>
+    <script>
+        // Apply the preferred appearance before the page is painted.
+        function readTheme() {
+            try { return localStorage.getItem('theme'); } catch { return null; }
+        }
+        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
+        const storedTheme = readTheme();
+        document.documentElement.dataset.theme =
+            storedTheme === 'light' || storedTheme === 'dark'
+                ? storedTheme : (systemTheme.matches ? 'dark' : 'light');
+    </script>
     <style>
         :root {
+            color-scheme: light;
             --bg-color: #f0f4f8;
             --container-bg: #ffffff;
             --text-primary: #2d3748;
             --text-secondary: #4a5568;
-            --text-muted: #718096;
-            --border-color: #e2e8f0;
+            --text-muted: #52647a;
+            --border-color: #d8e0e9;
             --ip-bg: #f7fafc;
-            --details-bg: #edf2f7;
-            --shadow: rgba(0, 0, 0, 0.1);
-            --button-bg: #4299e1;
-            --button-hover: #3182ce;
+            --button-bg: #246aa4;
+            --button-hover: #1e5787;
         }
-        
+
         [data-theme="dark"] {
+            color-scheme: dark;
             --bg-color: #1a202c;
             --container-bg: #2d3748;
             --text-primary: #f7fafc;
             --text-secondary: #e2e8f0;
-            --text-muted: #a0aec0;
-            --border-color: #4a5568;
-            --ip-bg: #374151;
-            --details-bg: #374151;
-            --shadow: rgba(0, 0, 0, 0.3);
-            --button-bg: #4299e1;
-            --button-hover: #3182ce;
+            --text-muted: #bac6d6;
+            --border-color: #526078;
+            --ip-bg: #263141;
+            --button-bg: #246aa4;
+            --button-hover: #1e5787;
         }
-        
-        * {
-            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-        }
-        
+
+        * { box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
             margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            padding: 5rem 1.5rem 2rem;
+            background: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.5;
         }
-        
+        .container {
+            width: 100%;
+            max-width: 60rem;
+            margin: 0 auto;
+            padding: 2rem 3rem;
+            background: var(--container-bg);
+            border-radius: 8px;
+        }
         .theme-toggle {
             position: fixed;
-            top: 20px;
-            right: 20px;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1;
+            min-height: 44px;
+            padding: 0.5rem 1rem;
+            border: 1px solid transparent;
+            border-radius: 6px;
             background: var(--button-bg);
-            color: white;
-            border: none;
-            border-radius: 50px;
-            padding: 12px 16px;
+            color: #fff;
+            font: inherit;
             cursor: pointer;
-            font-size: 18px;
-            box-shadow: 0 4px 12px var(--shadow);
-            z-index: 1000;
         }
-        
-        .theme-toggle:hover {
-            background: var(--button-hover);
-            transform: scale(1.05);
-        }
-        
-        .container {
-            background: var(--container-bg);
-            padding: 3rem;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px var(--shadow);
-            text-align: center;
-            max-width: 700px;
-            width: 90%;
-        }
-        
+        .theme-toggle:hover { background: var(--button-hover); }
+        .theme-toggle:active { border-color: #fff; }
+        :focus-visible { outline: 3px solid var(--text-primary); outline-offset: 4px; }
+        .header { margin: 0; font-size: 1.25rem; font-weight: 600; }
         .ip-display {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: var(--text-primary);
-            margin: 1rem 0;
-            padding: 1.5rem;
-            background: var(--ip-bg);
-            border-radius: 15px;
-            border: 2px solid var(--border-color);
-            font-family: 'Courier New', monospace;
-            word-break: break-all;
-            word-wrap: break-word;
-            line-height: 1.2;
-            min-height: 3rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .info {
-            color: var(--text-muted);
-            margin: 0.5rem 0;
-            font-size: 1.1rem;
-        }
-        
-        .header {
-            color: var(--text-primary);
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-        }
-        
-        .details {
-            background: var(--details-bg);
-            padding: 1.5rem;
-            border-radius: 15px;
-            margin-top: 2rem;
-            text-align: left;
-            border: 1px solid var(--border-color);
-        }
-        
-        .detail-row {
-            display: flex;
-            justify-content: space-between;
             margin: 0.75rem 0;
+            font-family: 'Courier New', monospace;
+            font-size: clamp(1.5rem, 3.5vw, 2.25rem);
+            font-weight: 600;
+            line-height: 1.4;
+            overflow-wrap: anywhere;
+            font-variant-numeric: tabular-nums;
+            user-select: all;
+        }
+        .info { margin: 0; color: var(--text-muted); }
+        .details { margin: 2rem 0; }
+        .detail-row {
+            display: grid;
+            grid-template-columns: 10rem minmax(0, 1fr);
+            gap: 1rem;
             padding: 0.75rem 0;
             border-bottom: 1px solid var(--border-color);
-            align-items: flex-start;
-            gap: 1rem;
         }
-        
-        .detail-row:last-child {
-            border-bottom: none;
-        }
-        
-        .detail-label {
-            font-weight: bold;
-            color: var(--text-secondary);
-            min-width: 120px;
-            flex-shrink: 0;
-        }
-        
+        .detail-row:first-child { border-top: 1px solid var(--border-color); }
+        .detail-label { color: var(--text-secondary); font-weight: 600; }
         .detail-value {
+            margin: 0;
+            min-width: 0;
             font-family: 'Courier New', monospace;
-            color: var(--text-primary);
-            word-break: break-all;
-            word-wrap: break-word;
-            text-align: right;
-            flex-grow: 1;
+            overflow-wrap: anywhere;
+            font-variant-numeric: tabular-nums;
         }
-        
-        .api-usage {
-            margin-top: 2rem;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            background: var(--details-bg);
-            padding: 1rem;
-            border-radius: 10px;
-            border: 1px solid var(--border-color);
-        }
-        
+        .api-usage { margin-top: 2rem; }
+        .api-usage h2 { margin: 0 0 1rem; font-size: 1.125rem; font-weight: 600; }
+        .api-usage p { margin: 0 0 1rem; }
+        .api-usage span { display: block; margin-bottom: 0.25rem; color: var(--text-secondary); }
         .api-usage code {
+            display: block;
+            padding: 0.75rem 1rem;
             background: var(--ip-bg);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: 'Courier New', monospace;
-            color: var(--text-primary);
-            word-break: break-all;
+            border-left: 2px solid var(--border-color);
+            font: 1rem/1.5 'Courier New', monospace;
+            white-space: pre;
+            overflow-x: auto;
         }
-        
         .footer {
             margin-top: 2rem;
-            padding-top: 1.5rem;
+            padding-top: 1rem;
             border-top: 1px solid var(--border-color);
             display: flex;
+            flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
-            font-size: 0.9rem;
+            gap: 0.75rem 1.5rem;
             color: var(--text-muted);
         }
-        
         .github-link {
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            text-decoration: none;
-            color: var(--text-muted);
-            transition: color 0.3s ease;
+            min-height: 44px;
+            color: var(--text-secondary);
+            text-underline-offset: 4px;
         }
-        
-        .github-link:hover {
-            color: var(--text-primary);
+        .github-link:hover { color: var(--text-primary); }
+        .github-logo { width: 20px; height: 20px; margin-right: 8px; fill: currentColor; }
+        .version-info { font: 0.875rem/1.5 'Courier New', monospace; overflow-wrap: anywhere; }
+        @media (max-width: 600px) {
+            body { padding: 5rem 0 0; }
+            .container { padding: 1.5rem; border-radius: 0; }
+            .detail-row { grid-template-columns: minmax(0, 1fr); gap: 0.25rem; }
         }
-        
-        .github-logo {
-            width: 20px;
-            height: 20px;
-            margin-right: 8px;
-            fill: currentColor;
-        }
-        
-        .version-info {
-            font-family: 'Courier New', monospace;
-            font-size: 0.8rem;
-        }
-        
-        @media (max-width: 768px) {
-            .container {
-                padding: 2rem;
-                margin: 1rem;
-                width: calc(100% - 2rem);
-            }
-            
-            .ip-display {
-                font-size: 1.8rem;
-                padding: 1rem;
-            }
-            
-            .header {
-                font-size: 2rem;
-            }
-            
-            .detail-row {
-                flex-direction: column;
-                gap: 0.5rem;
-                align-items: flex-start;
-            }
-            
-            .detail-label {
-                min-width: auto;
-            }
-            
-            .detail-value {
-                text-align: left;
-            }
-            
-            .theme-toggle {
-                top: 10px;
-                right: 10px;
-                padding: 10px 12px;
-                font-size: 16px;
-            }
-            
-            .footer {
-                flex-direction: column;
-                gap: 1rem;
-                text-align: center;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .ip-display {
-                font-size: 1.5rem;
-            }
-            
-            .header {
-                font-size: 1.8rem;
-            }
+        @media print {
+            body { padding: 0; }
+            .container { max-width: none; padding: 0; }
+            .theme-toggle { display: none; }
         }
     </style>
 </head>
 <body>
-    <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">
-        🌙
+    <button class="theme-toggle" type="button" onclick="toggleTheme()" id="themeToggle" aria-label="Switch to dark mode">
+        Dark mode
     </button>
     
-    <div class="container">
-        <h1 class="header">🌐 Your IP Address</h1>
-        <div class="ip-display">{{ client_ip }}</div>
-        <p class="info">This is your public IP address as seen by this server</p>
+    <main class="container">
+        <h1 class="header">Your IP address</h1>
+        <div class="ip-display">{% for group in client_ip.split(':') %}{{ group }}{% if not loop.last %}:<wbr>{% endif %}{% endfor %}</div>
+        <p class="info">Client address seen by this server</p>
         
-        <div class="details">
+        <dl class="details" aria-label="Connection details">
             <div class="detail-row">
-                <span class="detail-label">Client IP:</span>
-                <span class="detail-value">{{ client_ip }}</span>
+                <dt class="detail-label">Client IP:</dt>
+                <dd class="detail-value">{{ client_ip }}</dd>
             </div>
             {% if reverse_dns %}
             <div class="detail-row">
-                <span class="detail-label">Reverse DNS:</span>
-                <span class="detail-value">{{ reverse_dns }}</span>
+                <dt class="detail-label">Reverse DNS:</dt>
+                <dd class="detail-value">{{ reverse_dns }}</dd>
             </div>
             {% endif %}
             {% if geolocation %}
             <div class="detail-row">
-                <span class="detail-label">Location:</span>
-                <span class="detail-value">{{ geolocation.flag_emoji }} {{ geolocation.city }}, {{ geolocation.region }}, {{ geolocation.country }}</span>
+                <dt class="detail-label">Location:</dt>
+                <dd class="detail-value">{{ geolocation.flag_emoji }} {{ geolocation.city }}, {{ geolocation.region }}, {{ geolocation.country }}</dd>
             </div>
             <div class="detail-row">
-                <span class="detail-label">Coordinates:</span>
-                <span class="detail-value">{{ geolocation.latitude }}, {{ geolocation.longitude }}</span>
+                <dt class="detail-label">Coordinates:</dt>
+                <dd class="detail-value">{{ geolocation.latitude }}, {{ geolocation.longitude }}</dd>
             </div>
             <div class="detail-row">
-                <span class="detail-label">Timezone:</span>
-                <span class="detail-value">{{ geolocation.timezone }}</span>
+                <dt class="detail-label">Timezone:</dt>
+                <dd class="detail-value">{{ geolocation.timezone }}</dd>
             </div>
             <div class="detail-row">
-                <span class="detail-label">ISP:</span>
-                <span class="detail-value">{{ geolocation.isp }}</span>
+                <dt class="detail-label">ISP:</dt>
+                <dd class="detail-value">{{ geolocation.isp }}</dd>
             </div>
             {% if geolocation.org and geolocation.org != geolocation.isp %}
             <div class="detail-row">
-                <span class="detail-label">Organization:</span>
-                <span class="detail-value">{{ geolocation.org }}</span>
+                <dt class="detail-label">Organization:</dt>
+                <dd class="detail-value">{{ geolocation.org }}</dd>
             </div>
             {% endif %}
             {% else %}
             <div class="detail-row">
-                <span class="detail-label">Location:</span>
-                <span class="detail-value">🏠 Local/Private Network</span>
+                <dt class="detail-label">Location:</dt>
+                <dd class="detail-value">Unavailable (local address, disabled, or lookup failed)</dd>
             </div>
             {% endif %}
             <div class="detail-row">
-                <span class="detail-label">Server Host:</span>
-                <span class="detail-value">{{ server_host }}</span>
+                <dt class="detail-label">Server Host:</dt>
+                <dd class="detail-value">{{ server_host }}</dd>
             </div>
             <div class="detail-row">
-                <span class="detail-label">Server Port:</span>
-                <span class="detail-value">{{ server_port }}</span>
+                <dt class="detail-label">Server Port:</dt>
+                <dd class="detail-value">{{ server_port }}</dd>
             </div>
             <div class="detail-row">
-                <span class="detail-label">Request Time:</span>
-                <span class="detail-value">{{ timestamp }}</span>
+                <dt class="detail-label">Request Time:</dt>
+                <dd class="detail-value">{{ timestamp }}</dd>
             </div>
             <div class="detail-row">
-                <span class="detail-label">User Agent:</span>
-                <span class="detail-value">{{ user_agent }}</span>
+                <dt class="detail-label">User Agent:</dt>
+                <dd class="detail-value">{{ user_agent }}</dd>
             </div>
             {% if forwarded_for %}
             <div class="detail-row">
-                <span class="detail-label">X-Forwarded-For:</span>
-                <span class="detail-value">{{ forwarded_for }}</span>
+                <dt class="detail-label">X-Forwarded-For:</dt>
+                <dd class="detail-value">{{ forwarded_for }}</dd>
             </div>
             {% endif %}
             {% if real_ip %}
             <div class="detail-row">
-                <span class="detail-label">X-Real-IP:</span>
-                <span class="detail-value">{{ real_ip }}</span>
+                <dt class="detail-label">X-Real-IP:</dt>
+                <dd class="detail-value">{{ real_ip }}</dd>
             </div>
             {% endif %}
-        </div>
-        
-        <div class="api-usage">
-            <p><strong>💡 API Usage:</strong></p>
-            <p><code>curl {{ base_url }}</code> - Full info with location & ISP</p>
-            <p><code>curl {{ base_url }}?compact=true</code> - Just IP address</p>
-            <p><code>curl {{ base_url }}/json</code> - JSON format</p>
-        </div>
-        
+        </dl>
+
+        <section class="api-usage" aria-labelledby="api-heading">
+            <h2 id="api-heading">Use from the command line</h2>
+            <p><span>Full info, including available location and ISP</span><code tabindex="0">curl {{ base_url }}</code></p>
+            <p><span>IP address only</span><code tabindex="0">curl {{ base_url }}?compact=true</code></p>
+            <p><span>JSON response</span><code tabindex="0">curl {{ base_url }}/json</code></p>
+        </section>
+
         <div class="footer">
-            <a href="https://github.com/MichaelTrip/myipcontainer" target="_blank" class="github-link">
+            <a href="https://github.com/MichaelTrip/myipcontainer" target="_blank" rel="noopener noreferrer" class="github-link">
                 <svg class="github-logo" viewBox="0 0 16 16" aria-hidden="true">
                     <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
                 </svg>
@@ -390,45 +284,32 @@ HTML_TEMPLATE = """
                 {{ version_info.version }} ({{ version_info.commit }}) • {{ version_info.build_date }}
             </div>
         </div>
-    </div>
+    </main>
     
     <script>
-        // Initialize theme
-        function initTheme() {
-            const savedTheme = localStorage.getItem('theme') || 
-                              (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-            document.documentElement.setAttribute('data-theme', savedTheme);
-            updateThemeToggle(savedTheme);
-        }
-        
-        // Toggle theme
-        function toggleTheme() {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            
-            document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            updateThemeToggle(newTheme);
-        }
-        
-        // Update toggle button
         function updateThemeToggle(theme) {
             const toggle = document.getElementById('themeToggle');
-            toggle.textContent = theme === 'dark' ? '☀️' : '🌙';
-            toggle.title = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+            const label = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+            toggle.textContent = theme === 'dark' ? 'Light mode' : 'Dark mode';
+            toggle.setAttribute('aria-label', label);
+            toggle.title = label;
         }
-        
-        // Listen for system theme changes
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-            if (!localStorage.getItem('theme')) {
-                const newTheme = e.matches ? 'dark' : 'light';
-                document.documentElement.setAttribute('data-theme', newTheme);
-                updateThemeToggle(newTheme);
+
+        function toggleTheme() {
+            const newTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+            document.documentElement.dataset.theme = newTheme;
+            try { localStorage.setItem('theme', newTheme); } catch { /* Appearance still works without storage. */ }
+            updateThemeToggle(newTheme);
+        }
+
+        systemTheme.addEventListener('change', (event) => {
+            if (!readTheme()) {
+                const theme = event.matches ? 'dark' : 'light';
+                document.documentElement.dataset.theme = theme;
+                updateThemeToggle(theme);
             }
         });
-        
-        // Initialize on page load
-        initTheme();
+        updateThemeToggle(document.documentElement.dataset.theme);
     </script>
 </body>
 </html>
