@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.15-slim
 
 # Build arguments for version information
 ARG APP_VERSION=v1.0.0
